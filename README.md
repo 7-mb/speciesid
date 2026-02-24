@@ -8,6 +8,15 @@ Expo (TypeScript) Demo-App: Nutzer kann **1–5 Bilder** aus der Galerie auswäh
 
 Du brauchst stattdessen einen **Expo Dev Client** (Custom Development Build) oder ein Bare-Workflow Setup.
 
+Hinweis: Wenn du neue **Native Module** installierst (z.B. `@lodev09/react-native-exify`), musst du den Dev Client **neu bauen** (EAS Build oder `expo run:*`), sonst ist das Modul zur Laufzeit nicht verfügbar.
+
+## Wo finde ich die gespeicherten Bilder?
+
+- **iOS Fotos-App:** Die App speichert die Bilder (inkl. Dummy-EXIF) in ein Album namens **`feb-cropper-1`**. Du findest sie in **Fotos → Alben**.
+- **iOS Dateien-App (optional):** Zusätzlich liegt eine Kopie im App-Dokumente-Ordner. Mit den gesetzten iOS-Keys (`UIFileSharingEnabled`, `LSSupportsOpeningDocumentsInPlace`) erscheint die App unter **Dateien → Auf meinem iPhone → feb-cropper-1**.
+
+Wenn du `app.json` änderst oder neue Native Module installierst, baue den iOS Dev Client erneut (EAS Build), damit die Änderungen im nativen Build landen.
+
 ## Start (Android)
 
 1. Dependencies installieren

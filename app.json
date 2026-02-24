@@ -17,13 +17,17 @@
       "bundleIdentifier": "com.example.febcropper1",
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "Diese App benötigt Zugriff auf deine Fotomediathek, damit du Bilder auswählen kannst.",
+        "NSPhotoLibraryAddUsageDescription": "Diese App speichert bearbeitete Bilder (inkl. EXIF-Dummy-Daten) in deiner Fotogalerie.",
         "NSCameraUsageDescription": "Diese App benötigt Zugriff auf die Kamera, damit du ein Foto aufnehmen kannst.",
+        "UIFileSharingEnabled": true,
+        "LSSupportsOpeningDocumentsInPlace": true,
         "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
       "permissions": [
         "android.permission.CAMERA",
+        "android.permission.ACCESS_MEDIA_LOCATION",
         "android.permission.READ_MEDIA_IMAGES",
         "android.permission.READ_EXTERNAL_STORAGE"
       ],
