@@ -2,7 +2,7 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { enableScreens } from 'react-native-screens';
 
 import IdentifyScreen from './src/screens/IdentifyScreen';
@@ -24,6 +24,12 @@ const Tab = createBottomTabNavigator<RootTabsParamList>();
 
 function AppTabs() {
   const { t } = useI18n();
+  const insets = useSafeAreaInsets();
+
+  // Make the bottom tab bar a bit less tall so icons sit closer to the bottom edge.
+  // We still keep some safe-area spacing, but reduce it slightly.
+  const tabBarPaddingBottom = Math.max(4, insets.bottom - 16);
+  const tabBarHeight = 56 + tabBarPaddingBottom;
 
   return (
     <NavigationContainer>
@@ -33,6 +39,9 @@ function AppTabs() {
           tabBarStyle: {
             backgroundColor: colors.green,
             borderTopColor: colors.greenDark,
+            height: tabBarHeight,
+            //paddingTop: 6,
+            //paddingBottom: tabBarPaddingBottom,
           },
           tabBarActiveTintColor: colors.menuLink,
           tabBarInactiveTintColor: colors.buttonText,
