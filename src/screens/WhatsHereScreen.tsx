@@ -15,9 +15,13 @@ export default function WhatsHereScreen() {
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top + 12, paddingBottom: 12 + tabBarHeight }]}>
-      <ModeSwitcher mode={mode} onChange={setMode} />
-
       <Text style={styles.title}>{t('whatsHere.title')}</Text>
+
+      <Text style={styles.subtitle}>Choose what you are interested in</Text>
+      <View style={styles.modeSwitcherWrap}>
+        <ModeSwitcher mode={mode} onChange={setMode} />
+      </View>
+
       <Text style={styles.subtitle}>{t('whatsHere.subtitle')}</Text>
       <Text style={styles.emptyState}>{t('whatsHere.empty')}</Text>
     </View>

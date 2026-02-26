@@ -19,6 +19,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.text,
   },
+  modeSwitcherWrap: {
+    marginTop: 10,
+    marginBottom: 12,
+  },
   emptyState: {
     marginTop: 14,
     fontSize: 14,

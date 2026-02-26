@@ -265,9 +265,13 @@ export default function IdentifyScreen() {
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top + 12, paddingBottom: 12 + tabBarHeight }]}>
-      <ModeSwitcher mode={mode} onChange={setMode} />
-
       <Text style={styles.title}>{t('identify.title')}</Text>
+
+      <Text style={styles.modeHint}>Choose what you want to identify</Text>
+      <View style={styles.modeSwitcherWrap}>
+        <ModeSwitcher mode={mode} onChange={setMode} />
+      </View>
+
       <Text style={styles.subtitle}>{t('identify.subtitle')}</Text>
 
       <View style={styles.actionsRow}>
@@ -330,6 +334,15 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: '600',
     color: colors.text,
+  },
+  modeHint: {
+    marginTop: 10,
+    fontSize: 14,
+    color: colors.text,
+  },
+  modeSwitcherWrap: {
+    marginTop: 10,
+    marginBottom: 12,
   },
   subtitle: {
     marginTop: 6,
