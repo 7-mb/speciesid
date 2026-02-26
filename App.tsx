@@ -1,11 +1,18 @@
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useMemo, useState } from 'react';
-import { Alert, FlatList, Image, Pressable, SafeAreaView, StyleSheet, Text, View } from 'react-native';
+import { Alert, FlatList, Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { NavigationContainer } from '@react-navigation/native';
+import { createBottomTabNavigator, useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import ImagePicker, { type Image as PickerImage, type PickerErrorCode } from 'react-native-image-crop-picker';
 import * as FileSystem from 'expo-file-system';
 import * as Exify from '@lodev09/react-native-exify';
 import type { ExifTags } from '@lodev09/react-native-exify';
 import * as MediaLibrary from 'expo-media-library';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { enableScreens } from 'react-native-screens';
+
+enableScreens();
 
 const MAX_IMAGES = 5;
 
@@ -15,6 +22,14 @@ type StoredImage = {
   savedUri?: string;
   saving: boolean;
 };
+
+type RootTabsParamList = {
+  Identify: undefined;
+  WhatsHere: undefined;
+  Settings: undefined;
+};
+
+const Tab = createBottomTabNavigator<RootTabsParamList>();
 
 function createId(): string {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
@@ -66,8 +81,10 @@ function ensureImagesDir(): FileSystem.Directory {
   return dir;
 }
 
-export default function App() {
+function IdentifyScreen() {
   const [images, setImages] = useState<StoredImage[]>([]);
+  const insets = useSafeAreaInsets();
+  const tabBarHeight = useBottomTabBarHeight();
 
   const selectedCountText = useMemo(() => `${images.length}/${MAX_IMAGES}`, [images.length]);
   const savedCountText = useMemo(() => `${images.filter((i) => i.savedUri).length}/${images.length || 0}`, [images]);
@@ -86,8 +103,8 @@ export default function App() {
       return;
     }
 
-    const message = error instanceof Error ? error.message : 'Unbekannter Fehler beim Öffnen der Medienauswahl.';
-    Alert.alert('Fehler', message);
+    const message = error instanceof Error ? error.message : 'Unknown error while opening the media picker.';
+    Alert.alert('Error', message);
   }, []);
 
   const persistWithDummyExif = useCallback(
@@ -107,7 +124,7 @@ export default function App() {
 
         const permission = await MediaLibrary.requestPermissionsAsync();
         if (!permission.granted) {
-          Alert.alert('Keine Berechtigung', 'Ohne Foto-Berechtigung kann die App nicht in deine Fotogalerie speichern.');
+          Alert.alert('No permission', 'Without photo permission, the app cannot save to your photo library.');
         } else {
           const asset = await MediaLibrary.createAssetAsync(targetFile.uri);
           const albumName = 'feb-cropper-1';
@@ -211,7 +228,7 @@ export default function App() {
   const pickFromGallery = useCallback(async () => {
     const remainingSlots = MAX_IMAGES - images.length;
     if (remainingSlots <= 0) {
-      Alert.alert('Limit erreicht', `Du kannst maximal ${MAX_IMAGES} Bilder auswählen.`);
+      Alert.alert('Limit reached', `You can select up to ${MAX_IMAGES} images.`);
       return;
     }
 
@@ -231,7 +248,7 @@ export default function App() {
 
   const takePhoto = useCallback(async () => {
     if (images.length >= MAX_IMAGES) {
-      Alert.alert('Limit erreicht', `Du kannst maximal ${MAX_IMAGES} Bilder auswählen.`);
+      Alert.alert('Limit reached', `You can select up to ${MAX_IMAGES} images.`);
       return;
     }
 
@@ -251,68 +268,118 @@ export default function App() {
   }, [addImages, handlePickerError, images.length]);
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-        <Text style={styles.title}>Bilder auswählen</Text>
-        <Text style={styles.subtitle}>Wähle 1–5 Bilder aus der Galerie oder nimm ein Foto mit der Kamera auf.</Text>
+    <View style={[styles.screen, { paddingTop: insets.top + 12, paddingBottom: 12 + tabBarHeight }]}>
+      <Text style={styles.title}>Select images</Text>
+      <Text style={styles.subtitle}>Choose 1–5 images from your gallery, or take a photo with the camera.</Text>
 
-        <View style={styles.actionsRow}>
-          <Pressable onPress={pickFromGallery} style={[styles.button, styles.buttonLeft]}>
-            <Text style={styles.buttonText}>Aus Galerie wählen</Text>
-          </Pressable>
+      <View style={styles.actionsRow}>
+        <Pressable onPress={pickFromGallery} style={[styles.button, styles.buttonLeft]}>
+          <Text style={styles.buttonText}>Pick from gallery</Text>
+        </Pressable>
 
-          <Pressable onPress={takePhoto} style={styles.button}>
-            <Text style={styles.buttonText}>Mit Kamera aufnehmen</Text>
-          </Pressable>
-        </View>
-
-        <Text style={styles.counter}>Ausgewählt: {selectedCountText}</Text>
-        {images.length > 0 ? <Text style={styles.counter}>Gespeichert: {savedCountText}</Text> : null}
-        {images.length > 0 ? <Text style={styles.hint}>Tipp: Tippe auf ein Bild, um es zu croppen.</Text> : null}
-
-        {images.length === 0 ? (
-          <Text style={styles.emptyState}>Noch keine Bilder ausgewählt.</Text>
-        ) : (
-          <FlatList
-            data={images}
-            keyExtractor={(item) => item.id}
-            numColumns={3}
-            contentContainerStyle={styles.grid}
-            renderItem={({ item }) => (
-              <View style={styles.gridItem}>
-                <Pressable onPress={() => cropImage(item)} style={styles.thumbnailPressable}>
-                  <Image
-                    source={{ uri: item.savedUri ?? normalizeUri(item.picker.path) }}
-                    style={styles.thumbnail}
-                    accessibilityLabel="Ausgewähltes Bild"
-                  />
-                </Pressable>
-
-                <Pressable
-                  onPress={() => removeImage(item.id)}
-                  hitSlop={10}
-                  style={styles.removeButton}
-                  accessibilityRole="button"
-                  accessibilityLabel="Bild entfernen"
-                >
-                  <Text style={styles.removeButtonText}>×</Text>
-                </Pressable>
-              </View>
-            )}
-          />
-        )}
+        <Pressable onPress={takePhoto} style={styles.button}>
+          <Text style={styles.buttonText}>Take a photo</Text>
+        </Pressable>
       </View>
 
-      <StatusBar style="auto" />
-    </SafeAreaView>
+      <Text style={styles.counter}>Selected: {selectedCountText}</Text>
+      {images.length > 0 ? <Text style={styles.counter}>Saved: {savedCountText}</Text> : null}
+      {images.length > 0 ? <Text style={styles.hint}>Tip: Tap an image to crop it.</Text> : null}
+
+      {images.length === 0 ? (
+        <Text style={styles.emptyState}>No images selected yet.</Text>
+      ) : (
+        <FlatList
+          data={images}
+          keyExtractor={(item) => item.id}
+          numColumns={3}
+          contentContainerStyle={[styles.grid, { paddingBottom: 24 + tabBarHeight }]}
+          renderItem={({ item }) => (
+            <View style={styles.gridItem}>
+              <Pressable onPress={() => cropImage(item)} style={styles.thumbnailPressable}>
+                <Image
+                  source={{ uri: item.savedUri ?? normalizeUri(item.picker.path) }}
+                  style={styles.thumbnail}
+                  accessibilityLabel="Selected image"
+                />
+              </Pressable>
+
+              <Pressable
+                onPress={() => removeImage(item.id)}
+                hitSlop={10}
+                style={styles.removeButton}
+                accessibilityRole="button"
+                accessibilityLabel="Remove image"
+              >
+                <Text style={styles.removeButtonText}>×</Text>
+              </Pressable>
+            </View>
+          )}
+        />
+      )}
+    </View>
+  );
+}
+
+function WhatsHereScreen() {
+  const insets = useSafeAreaInsets();
+  const tabBarHeight = useBottomTabBarHeight();
+
+  return (
+    <View style={[styles.screen, { paddingTop: insets.top + 12, paddingBottom: 12 + tabBarHeight }]}>
+      <Text style={styles.title}>What's here?</Text>
+      <Text style={styles.subtitle}>Placeholder screen for local observations and suggestions.</Text>
+      <Text style={styles.emptyState}>Coming soon.</Text>
+    </View>
+  );
+}
+
+function SettingsScreen() {
+  const insets = useSafeAreaInsets();
+  const tabBarHeight = useBottomTabBarHeight();
+
+  return (
+    <View style={[styles.screen, { paddingTop: insets.top + 12, paddingBottom: 12 + tabBarHeight }]}>
+      <Text style={styles.title}>Settings</Text>
+      <Text style={styles.subtitle}>Placeholder screen for app preferences.</Text>
+      <Text style={styles.emptyState}>Coming soon.</Text>
+    </View>
+  );
+}
+
+export default function App() {
+  return (
+    <SafeAreaProvider>
+      <NavigationContainer>
+        <Tab.Navigator
+          screenOptions={({ route }) => ({
+            headerShown: false,
+            tabBarIcon: ({ focused, color, size }) => {
+              let iconName: keyof typeof Ionicons.glyphMap;
+              if (route.name === 'Identify') {
+                iconName = focused ? 'leaf' : 'leaf-outline';
+              } else if (route.name === 'WhatsHere') {
+                iconName = focused ? 'map' : 'map-outline';
+              } else {
+                iconName = focused ? 'settings' : 'settings-outline';
+              }
+
+              return <Ionicons name={iconName} size={size} color={color} />;
+            },
+          })}
+        >
+          <Tab.Screen name="Identify" component={IdentifyScreen} options={{ tabBarLabel: 'Bestimmen' }} />
+          <Tab.Screen name="WhatsHere" component={WhatsHereScreen} options={{ tabBarLabel: "Was gibt's hier?" }} />
+          <Tab.Screen name="Settings" component={SettingsScreen} options={{ tabBarLabel: 'Einstellungen' }} />
+        </Tab.Navigator>
+        <StatusBar style="auto" />
+      </NavigationContainer>
+    </SafeAreaProvider>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-  },
-  container: {
+  screen: {
     flex: 1,
     paddingHorizontal: 16,
     paddingVertical: 12,
