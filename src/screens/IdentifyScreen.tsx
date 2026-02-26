@@ -10,6 +10,7 @@ import * as MediaLibrary from 'expo-media-library';
 
 import ModeSwitcher from '../components/ModeSwitcher';
 import { useMode } from '../state/mode';
+import { colors } from '../theme/colors';
 
 const MAX_IMAGES = 5;
 
@@ -317,14 +318,17 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 16,
     paddingVertical: 12,
+    backgroundColor: colors.white,
   },
   title: {
     fontSize: 22,
     fontWeight: '600',
+    color: colors.text,
   },
   subtitle: {
     marginTop: 6,
     fontSize: 14,
+    color: colors.text,
   },
   actionsRow: {
     marginTop: 16,
@@ -338,6 +342,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 10,
     alignItems: 'center',
+    backgroundColor: colors.green,
+    borderColor: colors.greenDark,
   },
   buttonLeft: {
     marginRight: 12,
@@ -345,18 +351,22 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 14,
     fontWeight: '500',
+    color: colors.buttonText,
   },
   counter: {
     marginTop: 12,
     fontSize: 14,
+    color: colors.text,
   },
   hint: {
     marginTop: 6,
     fontSize: 13,
+    color: colors.text,
   },
   emptyState: {
     marginTop: 14,
     fontSize: 14,
+    color: colors.text,
   },
   grid: {
     paddingTop: 14,
@@ -383,10 +393,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: colors.green,
+    borderColor: colors.greenDark,
   },
   removeButtonText: {
     fontSize: 20,
     lineHeight: 20,
     fontWeight: '600',
+    color: colors.buttonText,
   },
 });

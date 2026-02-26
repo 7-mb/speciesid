@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import type { IdentifyMode } from '../state/mode';
+import { colors } from '../theme/colors';
 
 type ModeOption = {
   key: IdentifyMode;
@@ -45,7 +46,11 @@ function ModeSwitcherBase({ mode, onChange }: Props) {
             accessibilityState={{ selected }}
             accessibilityLabel={option.label}
           >
-            <MaterialCommunityIcons name={selected ? option.iconFilled : option.iconOutline} size={18} />
+            <MaterialCommunityIcons
+              name={selected ? option.iconFilled : option.iconOutline}
+              size={18}
+              color={selected ? colors.menuLink : colors.buttonText}
+            />
             <Text style={[styles.label, selected ? styles.labelSelected : null]}>{option.label}</Text>
           </Pressable>
         );
@@ -57,7 +62,9 @@ function ModeSwitcherBase({ mode, onChange }: Props) {
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
+    backgroundColor: colors.greenLight,
     borderWidth: 1,
+    borderColor: colors.greenDark,
     borderRadius: 14,
     overflow: 'hidden',
   },
@@ -71,14 +78,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
   itemSelected: {
-    backgroundColor: 'rgba(0,0,0,0.06)',
+    backgroundColor: colors.greenDark,
   },
   label: {
     fontSize: 13,
     fontWeight: '500',
+    color: colors.buttonText,
   },
   labelSelected: {
     fontWeight: '700',
+    color: colors.menuLink,
   },
 });
 

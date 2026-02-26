@@ -9,6 +9,7 @@ import IdentifyScreen from './src/screens/IdentifyScreen';
 import WhatsHereScreen from './src/screens/WhatsHereScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 import { ModeProvider } from './src/state/mode';
+import { colors } from './src/theme/colors';
 
 enableScreens();
 
@@ -28,6 +29,12 @@ export default function App() {
           <Tab.Navigator
             screenOptions={({ route }) => ({
               headerShown: false,
+              tabBarStyle: {
+                backgroundColor: colors.green,
+                borderTopColor: colors.greenDark,
+              },
+              tabBarActiveTintColor: colors.menuLink,
+              tabBarInactiveTintColor: colors.buttonText,
               tabBarIcon: ({ focused, color, size }) => {
                 let iconName: keyof typeof Ionicons.glyphMap;
                 if (route.name === 'Identify') {
