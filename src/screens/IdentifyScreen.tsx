@@ -9,6 +9,7 @@ import type { ExifTags } from '@lodev09/react-native-exify';
 import * as MediaLibrary from 'expo-media-library';
 
 import ModeSwitcher from '../components/ModeSwitcher';
+import { useI18n } from '../state/language';
 import { useMode } from '../state/mode';
 import { colors } from '../theme/colors';
 
@@ -76,6 +77,7 @@ export default function IdentifyScreen() {
   const insets = useSafeAreaInsets();
   const tabBarHeight = useBottomTabBarHeight();
   const { mode, setMode } = useMode();
+  const { t } = useI18n();
 
   const selectedCountText = useMemo(() => `${images.length}/${MAX_IMAGES}`, [images.length]);
   const savedCountText = useMemo(() => `${images.filter((i) => i.savedUri).length}/${images.length || 0}`, [images]);
@@ -94,9 +96,9 @@ export default function IdentifyScreen() {
       return;
     }
 
-    const message = error instanceof Error ? error.message : 'Unknown error while opening the media picker.';
-    Alert.alert('Error', message);
-  }, []);
+    const message = error instanceof Error ? error.message : t('identify.alerts.unknownPickerError');
+    Alert.alert(t('identify.alerts.errorTitle'), message);
+  }, [t]);
 
   const persistWithDummyExif = useCallback(
     async (id: string, picker: PickerImage) => {
@@ -115,7 +117,7 @@ export default function IdentifyScreen() {
 
         const permission = await MediaLibrary.requestPermissionsAsync();
         if (!permission.granted) {
-          Alert.alert('No permission', 'Without photo permission, the app cannot save to your photo library.');
+          Alert.alert(t('identify.alerts.noPermissionTitle'), t('identify.alerts.noPermissionBody'));
         } else {
           const asset = await MediaLibrary.createAssetAsync(targetFile.uri);
           const albumName = 'feb-cropper-1';
@@ -133,7 +135,7 @@ export default function IdentifyScreen() {
         handlePickerError(error);
       }
     },
-    [handlePickerError, normalizeUri]
+    [handlePickerError, normalizeUri, t]
   );
 
   const addImages = useCallback(
@@ -222,7 +224,7 @@ export default function IdentifyScreen() {
   const pickFromGallery = useCallback(async () => {
     const remainingSlots = MAX_IMAGES - images.length;
     if (remainingSlots <= 0) {
-      Alert.alert('Limit reached', `You can select up to ${MAX_IMAGES} images.`);
+      Alert.alert(t('identify.alerts.limitTitle'), t('identify.alerts.limitBody', { max: MAX_IMAGES }));
       return;
     }
 
@@ -238,11 +240,11 @@ export default function IdentifyScreen() {
     } catch (error) {
       handlePickerError(error);
     }
-  }, [addImages, handlePickerError, images.length]);
+  }, [addImages, handlePickerError, images.length, t]);
 
   const takePhoto = useCallback(async () => {
     if (images.length >= MAX_IMAGES) {
-      Alert.alert('Limit reached', `You can select up to ${MAX_IMAGES} images.`);
+      Alert.alert(t('identify.alerts.limitTitle'), t('identify.alerts.limitBody', { max: MAX_IMAGES }));
       return;
     }
 
@@ -259,31 +261,31 @@ export default function IdentifyScreen() {
     } catch (error) {
       handlePickerError(error);
     }
-  }, [addImages, handlePickerError, images.length]);
+  }, [addImages, handlePickerError, images.length, t]);
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top + 12, paddingBottom: 12 + tabBarHeight }]}>
       <ModeSwitcher mode={mode} onChange={setMode} />
 
-      <Text style={styles.title}>Select images</Text>
-      <Text style={styles.subtitle}>Choose 1–5 images from your gallery, or take a photo with the camera.</Text>
+      <Text style={styles.title}>{t('identify.title')}</Text>
+      <Text style={styles.subtitle}>{t('identify.subtitle')}</Text>
 
       <View style={styles.actionsRow}>
         <Pressable onPress={pickFromGallery} style={[styles.button, styles.buttonLeft]}>
-          <Text style={styles.buttonText}>Pick from gallery</Text>
+          <Text style={styles.buttonText}>{t('identify.actions.pickGallery')}</Text>
         </Pressable>
 
         <Pressable onPress={takePhoto} style={styles.button}>
-          <Text style={styles.buttonText}>Take a photo</Text>
+          <Text style={styles.buttonText}>{t('identify.actions.takePhoto')}</Text>
         </Pressable>
       </View>
 
-      <Text style={styles.counter}>Selected: {selectedCountText}</Text>
-      {images.length > 0 ? <Text style={styles.counter}>Saved: {savedCountText}</Text> : null}
-      {images.length > 0 ? <Text style={styles.hint}>Tip: Tap an image to crop it.</Text> : null}
+      <Text style={styles.counter}>{t('identify.counters.selected', { count: selectedCountText })}</Text>
+      {images.length > 0 ? <Text style={styles.counter}>{t('identify.counters.saved', { count: savedCountText })}</Text> : null}
+      {images.length > 0 ? <Text style={styles.hint}>{t('identify.hints.cropTip')}</Text> : null}
 
       {images.length === 0 ? (
-        <Text style={styles.emptyState}>No images selected yet.</Text>
+        <Text style={styles.emptyState}>{t('identify.empty.noImages')}</Text>
       ) : (
         <FlatList
           data={images}
@@ -293,7 +295,11 @@ export default function IdentifyScreen() {
           renderItem={({ item }) => (
             <View style={styles.gridItem}>
               <Pressable onPress={() => cropImage(item)} style={styles.thumbnailPressable}>
-                <Image source={{ uri: item.savedUri ?? normalizeUri(item.picker.path) }} style={styles.thumbnail} accessibilityLabel="Selected image" />
+                <Image
+                  source={{ uri: item.savedUri ?? normalizeUri(item.picker.path) }}
+                  style={styles.thumbnail}
+                  accessibilityLabel={t('identify.accessibility.selectedImage')}
+                />
               </Pressable>
 
               <Pressable
@@ -301,7 +307,7 @@ export default function IdentifyScreen() {
                 hitSlop={10}
                 style={styles.removeButton}
                 accessibilityRole="button"
-                accessibilityLabel="Remove image"
+                accessibilityLabel={t('identify.accessibility.removeImage')}
               >
                 <Text style={styles.removeButtonText}>×</Text>
               </Pressable>
