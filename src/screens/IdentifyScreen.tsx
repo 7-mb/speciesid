@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, FlatList, Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ImagePicker, { type Image as PickerImage, type PickerErrorCode } from 'react-native-image-crop-picker';
@@ -79,6 +79,8 @@ function ensureImagesDir(): FileSystem.Directory {
 export default function IdentifyScreen() {
   const [images, setImages] = useState<StoredImage[]>([]);
   const [isIdentifying, setIsIdentifying] = useState(false);
+  const [identifyResponseText, setIdentifyResponseText] = useState<string>('');
+
   const insets = useSafeAreaInsets();
   const tabBarHeight = useBottomTabBarHeight();
   const { mode, setMode } = useMode();
@@ -91,19 +93,21 @@ export default function IdentifyScreen() {
     if (path.startsWith('file://') || path.startsWith('content://') || path.startsWith('http://') || path.startsWith('https://')) {
       return path;
     }
-
     return `file://${path}`;
   }, []);
 
-  const handlePickerError = useCallback((error: unknown) => {
-    const maybeCode = (error as { code?: PickerErrorCode }).code;
-    if (maybeCode === 'E_PICKER_CANCELLED') {
-      return;
-    }
+  const handlePickerError = useCallback(
+    (error: unknown) => {
+      const maybeCode = (error as { code?: PickerErrorCode }).code;
+      if (maybeCode === 'E_PICKER_CANCELLED') {
+        return;
+      }
 
-    const message = error instanceof Error ? error.message : t('identify.alerts.unknownPickerError');
-    Alert.alert(t('identify.alerts.errorTitle'), message);
-  }, [t]);
+      const message = error instanceof Error ? error.message : t('identify.alerts.unknownPickerError');
+      Alert.alert(t('identify.alerts.errorTitle'), message);
+    },
+    [t]
+  );
 
   const persistWithDummyExif = useCallback(
     async (id: string, picker: PickerImage) => {
@@ -275,6 +279,7 @@ export default function IdentifyScreen() {
     }
 
     setIsIdentifying(true);
+    setIdentifyResponseText('');
     try {
       const today = new Date().toISOString().slice(0, 10);
       const payload = {
@@ -300,7 +305,21 @@ export default function IdentifyScreen() {
         throw new Error(details ? `${response.status} ${response.statusText}: ${details}` : `${response.status} ${response.statusText}`);
       }
 
-      await response.text().catch(() => undefined);
+      const raw = await response.text();
+      const contentType = response.headers.get('content-type') ?? '';
+      const trimmed = raw.trim();
+      const looksLikeJson = contentType.includes('application/json') || trimmed.startsWith('{') || trimmed.startsWith('[');
+
+      if (looksLikeJson) {
+        try {
+          const parsed = JSON.parse(raw);
+          setIdentifyResponseText(JSON.stringify(parsed, null, 2));
+        } catch {
+          setIdentifyResponseText(raw);
+        }
+      } else {
+        setIdentifyResponseText(raw);
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : t('identify.alerts.requestFailed');
       Alert.alert(t('identify.alerts.errorTitle'), message);
@@ -310,44 +329,41 @@ export default function IdentifyScreen() {
   }, [t]);
 
   return (
-    <View style={[styles.screen, { paddingTop: insets.top + 12, paddingBottom: 12 + tabBarHeight }]}>
-      <Text style={styles.title}>{t('identify.title')}</Text>
+    <View style={[styles.screen, { paddingTop: insets.top + 12, paddingBottom: 0 }]}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: tabBarHeight }]}
+        showsVerticalScrollIndicator={false}
+      >
+        <Text style={styles.title}>{t('identify.title')}</Text>
 
-      <Text style={styles.modeHint}>Choose what you want to identify</Text>
-      <View style={styles.modeSwitcherWrap}>
-        <ModeSwitcher mode={mode} onChange={setMode} />
-      </View>
-
-      <Text style={styles.subtitle}>{t('identify.subtitle')}</Text>
-
-      <View style={styles.actionsRow}>
-        <Pressable onPress={pickFromGallery} style={[styles.button, styles.buttonLeft]}>
-          <Text style={styles.buttonText}>{t('identify.actions.pickGallery')}</Text>
-        </Pressable>
-
-        <Pressable onPress={takePhoto} style={styles.button}>
-          <Text style={styles.buttonText}>{t('identify.actions.takePhoto')}</Text>
-        </Pressable>
-      </View>
-
-      <Text style={styles.counter}>{t('identify.counters.selected', { count: selectedCountText })}</Text>
-      {images.length > 0 ? <Text style={styles.counter}>{t('identify.counters.saved', { count: savedCountText })}</Text> : null}
-      {images.length > 0 ? <Text style={styles.hint}>{t('identify.hints.cropTip')}</Text> : null}
-
-      {images.length === 0 ? (
-        <View style={styles.content}>
-          <Text style={styles.emptyState}>{t('identify.empty.noImages')}</Text>
+        <Text style={styles.modeHint}>Choose what you want to identify</Text>
+        <View style={styles.modeSwitcherWrap}>
+          <ModeSwitcher mode={mode} onChange={setMode} />
         </View>
-      ) : (
-        <View style={styles.content}>
-          <FlatList
-            data={images}
-            keyExtractor={(item) => item.id}
-            numColumns={3}
-            style={styles.list}
-            contentContainerStyle={styles.grid}
-            renderItem={({ item }) => (
-              <View style={styles.gridItem}>
+
+        <Text style={styles.subtitle}>{t('identify.subtitle')}</Text>
+
+        <View style={styles.actionsRow}>
+          <Pressable onPress={pickFromGallery} style={[styles.button, styles.buttonLeft]}>
+            <Text style={styles.buttonText}>{t('identify.actions.pickGallery')}</Text>
+          </Pressable>
+
+          <Pressable onPress={takePhoto} style={styles.button}>
+            <Text style={styles.buttonText}>{t('identify.actions.takePhoto')}</Text>
+          </Pressable>
+        </View>
+
+        <Text style={styles.counter}>{t('identify.counters.selected', { count: selectedCountText })}</Text>
+        {images.length > 0 ? <Text style={styles.counter}>{t('identify.counters.saved', { count: savedCountText })}</Text> : null}
+        {images.length > 0 ? <Text style={styles.hint}>{t('identify.hints.cropTip')}</Text> : null}
+
+        {images.length === 0 ? (
+          <Text style={styles.emptyState}>{t('identify.empty.noImages')}</Text>
+        ) : (
+          <View style={styles.gridWrap}>
+            {images.map((item) => (
+              <View key={item.id} style={styles.gridItem}>
                 <Pressable onPress={() => cropImage(item)} style={styles.thumbnailPressable}>
                   <Image
                     source={{ uri: item.savedUri ?? normalizeUri(item.picker.path) }}
@@ -366,23 +382,33 @@ export default function IdentifyScreen() {
                   <Text style={styles.removeButtonText}>×</Text>
                 </Pressable>
               </View>
-            )}
-          />
-        </View>
-      )}
+            ))}
+          </View>
+        )}
 
-      <View style={styles.bottomBar}>
-        <Pressable
-          onPress={handleIdentify}
-          disabled={isIdentifying}
-          style={({ pressed }) => [styles.identifyButton, pressed ? styles.identifyButtonPressed : null, isIdentifying ? styles.identifyButtonDisabled : null]}
-          accessibilityRole="button"
-          accessibilityLabel={t('identify.actions.identify')}
-        >
-          <MaterialCommunityIcons name="message-text" size={18} color={colors.buttonText} />
-          <Text style={styles.identifyButtonText}>{t('identify.actions.identify')}</Text>
-        </Pressable>
-      </View>
+        <View style={styles.bottomBar}>
+          <Pressable
+            onPress={handleIdentify}
+            disabled={isIdentifying}
+            style={({ pressed }) => [
+              styles.identifyButton,
+              pressed ? styles.identifyButtonPressed : null,
+              isIdentifying ? styles.identifyButtonDisabled : null,
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel={t('identify.actions.identify')}
+          >
+            <MaterialCommunityIcons name="message-text" size={18} color={colors.buttonText} />
+            <Text style={styles.identifyButtonText}>{t('identify.actions.identify')}</Text>
+          </Pressable>
+
+          {identifyResponseText ? (
+            <Text style={styles.identifyResponseText} selectable>
+              {identifyResponseText}
+            </Text>
+          ) : null}
+        </View>
+      </ScrollView>
 
       {isIdentifying ? (
         <View style={styles.loadingOverlay} pointerEvents="auto">
@@ -399,6 +425,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     backgroundColor: colors.white,
+  },
+  scroll: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 0,
   },
   title: {
     fontSize: 22,
@@ -452,24 +484,20 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.text,
   },
-  content: {
-    flex: 1,
-  },
   emptyState: {
     marginTop: 14,
     fontSize: 14,
     color: colors.text,
   },
-  grid: {
-    paddingTop: 14,
-    paddingBottom: 12,
-  },
-  list: {
-    flex: 1,
+  gridWrap: {
+    marginTop: 14,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginHorizontal: -5,
   },
   gridItem: {
-    flex: 1,
-    margin: 5,
+    width: '33.3333%',
+    padding: 5,
   },
   thumbnailPressable: {
     flex: 1,
@@ -522,6 +550,12 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     color: colors.buttonText,
+  },
+  identifyResponseText: {
+    marginTop: 6,
+    fontSize: 8,
+    lineHeight: 10,
+    color: colors.gray1,
   },
   loadingOverlay: {
     ...StyleSheet.absoluteFillObject,
