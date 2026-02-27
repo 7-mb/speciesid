@@ -12,12 +12,15 @@ export type TranslationKey =
   | 'identify.subtitle'
   | 'identify.actions.pickGallery'
   | 'identify.actions.takePhoto'
+  | 'identify.actions.identify'
   | 'identify.counters.selected'
   | 'identify.counters.saved'
   | 'identify.hints.cropTip'
   | 'identify.empty.noImages'
   | 'identify.alerts.errorTitle'
   | 'identify.alerts.unknownPickerError'
+  | 'identify.alerts.missingApiUrl'
+  | 'identify.alerts.requestFailed'
   | 'identify.alerts.noPermissionTitle'
   | 'identify.alerts.noPermissionBody'
   | 'identify.alerts.limitTitle'
@@ -56,12 +59,15 @@ export const TRANSLATIONS: Record<Language, Dictionary> = {
     'identify.subtitle': 'Wähle 1–5 Bilder aus deiner Galerie oder mache ein Foto mit der Kamera.',
     'identify.actions.pickGallery': 'Aus Galerie wählen',
     'identify.actions.takePhoto': 'Foto aufnehmen',
+    'identify.actions.identify': 'Identifizieren',
     'identify.counters.selected': 'Ausgewählt: {{count}}',
     'identify.counters.saved': 'Gespeichert: {{count}}',
     'identify.hints.cropTip': 'Tipp: Tippe ein Bild an, um es zuzuschneiden.',
     'identify.empty.noImages': 'Noch keine Bilder ausgewählt.',
     'identify.alerts.errorTitle': 'Fehler',
     'identify.alerts.unknownPickerError': 'Unbekannter Fehler beim Öffnen der Medienauswahl.',
+    'identify.alerts.missingApiUrl': 'Es ist keine API-URL konfiguriert (EXPO_PUBLIC_IDENTIFY_API_URL).',
+    'identify.alerts.requestFailed': 'Identifizierung fehlgeschlagen. Bitte versuche es erneut.',
     'identify.alerts.noPermissionTitle': 'Keine Berechtigung',
     'identify.alerts.noPermissionBody': 'Ohne Foto-Berechtigung kann die App nicht in deine Mediathek speichern.',
     'identify.alerts.limitTitle': 'Limit erreicht',
@@ -97,12 +103,15 @@ export const TRANSLATIONS: Record<Language, Dictionary> = {
     'identify.subtitle': 'Choose 1–5 images from your gallery, or take a photo with the camera.',
     'identify.actions.pickGallery': 'Pick from gallery',
     'identify.actions.takePhoto': 'Take a photo',
+    'identify.actions.identify': 'Identify',
     'identify.counters.selected': 'Selected: {{count}}',
     'identify.counters.saved': 'Saved: {{count}}',
     'identify.hints.cropTip': 'Tip: Tap an image to crop it.',
     'identify.empty.noImages': 'No images selected yet.',
     'identify.alerts.errorTitle': 'Error',
     'identify.alerts.unknownPickerError': 'Unknown error while opening the media picker.',
+    'identify.alerts.missingApiUrl': 'No API URL configured (EXPO_PUBLIC_IDENTIFY_API_URL).',
+    'identify.alerts.requestFailed': 'Identification failed. Please try again.',
     'identify.alerts.noPermissionTitle': 'No permission',
     'identify.alerts.noPermissionBody': 'Without photo permission, the app cannot save to your photo library.',
     'identify.alerts.limitTitle': 'Limit reached',
@@ -138,12 +147,15 @@ export const TRANSLATIONS: Record<Language, Dictionary> = {
     'identify.subtitle': "Choisissez 1 à 5 images dans votre galerie, ou prenez une photo avec l’appareil.",
     'identify.actions.pickGallery': 'Choisir dans la galerie',
     'identify.actions.takePhoto': 'Prendre une photo',
+    'identify.actions.identify': 'Identifier',
     'identify.counters.selected': 'Sélectionnées : {{count}}',
     'identify.counters.saved': 'Enregistrées : {{count}}',
     'identify.hints.cropTip': 'Astuce : touchez une image pour la recadrer.',
     'identify.empty.noImages': "Aucune image sélectionnée pour l’instant.",
     'identify.alerts.errorTitle': 'Erreur',
     'identify.alerts.unknownPickerError': 'Erreur inconnue lors de l’ouverture du sélecteur de médias.',
+    'identify.alerts.missingApiUrl': "Aucune URL d’API configurée (EXPO_PUBLIC_IDENTIFY_API_URL).",
+    'identify.alerts.requestFailed': "L’identification a échoué. Veuillez réessayer.",
     'identify.alerts.noPermissionTitle': 'Aucune autorisation',
     'identify.alerts.noPermissionBody': "Sans autorisation Photos, l’app ne peut pas enregistrer dans votre photothèque.",
     'identify.alerts.limitTitle': 'Limite atteinte',
@@ -179,12 +191,15 @@ export const TRANSLATIONS: Record<Language, Dictionary> = {
     'identify.subtitle': 'Scegli 1–5 immagini dalla galleria o scatta una foto con la fotocamera.',
     'identify.actions.pickGallery': 'Scegli dalla galleria',
     'identify.actions.takePhoto': 'Scatta una foto',
+    'identify.actions.identify': 'Identifica',
     'identify.counters.selected': 'Selezionate: {{count}}',
     'identify.counters.saved': 'Salvate: {{count}}',
     'identify.hints.cropTip': 'Suggerimento: tocca un’immagine per ritagliarla.',
     'identify.empty.noImages': 'Nessuna immagine selezionata.',
     'identify.alerts.errorTitle': 'Errore',
     'identify.alerts.unknownPickerError': "Errore sconosciuto durante l’apertura del selettore multimediale.",
+    'identify.alerts.missingApiUrl': 'Nessun URL API configurato (EXPO_PUBLIC_IDENTIFY_API_URL).',
+    'identify.alerts.requestFailed': 'Identificazione non riuscita. Riprova.',
     'identify.alerts.noPermissionTitle': 'Nessuna autorizzazione',
     'identify.alerts.noPermissionBody': "Senza il permesso Foto, l’app non può salvare nella libreria fotografica.",
     'identify.alerts.limitTitle': 'Limite raggiunto',

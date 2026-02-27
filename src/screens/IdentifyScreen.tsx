@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
-import { Alert, FlatList, Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ImagePicker, { type Image as PickerImage, type PickerErrorCode } from 'react-native-image-crop-picker';
@@ -7,6 +7,7 @@ import * as FileSystem from 'expo-file-system';
 import * as Exify from '@lodev09/react-native-exify';
 import type { ExifTags } from '@lodev09/react-native-exify';
 import * as MediaLibrary from 'expo-media-library';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import ModeSwitcher from '../components/ModeSwitcher';
 import { useI18n } from '../state/language';
@@ -14,6 +15,9 @@ import { useMode } from '../state/mode';
 import { colors } from '../theme/colors';
 
 const MAX_IMAGES = 5;
+const IDENTIFY_API_URL =
+  (globalThis as unknown as { process?: { env?: Record<string, string | undefined> } }).process?.env?.EXPO_PUBLIC_IDENTIFY_API_URL ??
+  'https://speciesid.wsl.ch/florid';
 
 type StoredImage = {
   id: string;
@@ -74,6 +78,7 @@ function ensureImagesDir(): FileSystem.Directory {
 
 export default function IdentifyScreen() {
   const [images, setImages] = useState<StoredImage[]>([]);
+  const [isIdentifying, setIsIdentifying] = useState(false);
   const insets = useSafeAreaInsets();
   const tabBarHeight = useBottomTabBarHeight();
   const { mode, setMode } = useMode();
@@ -263,6 +268,47 @@ export default function IdentifyScreen() {
     }
   }, [addImages, handlePickerError, images.length, t]);
 
+  const handleIdentify = useCallback(async () => {
+    if (!IDENTIFY_API_URL) {
+      Alert.alert(t('identify.alerts.errorTitle'), t('identify.alerts.missingApiUrl'));
+      return;
+    }
+
+    setIsIdentifying(true);
+    try {
+      const today = new Date().toISOString().slice(0, 10);
+      const payload = {
+        images: [],
+        lat: 47.33965229871837,
+        lon: 7.8931488585743645,
+        date: today,
+        num_taxon_ids: 5,
+        req_taxon_ids: [1000000],
+      };
+
+      const response = await fetch(IDENTIFY_API_URL, {
+        method: 'POST',
+        headers: {
+          Accept: '*/*',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const details = await response.text().catch(() => '');
+        throw new Error(details ? `${response.status} ${response.statusText}: ${details}` : `${response.status} ${response.statusText}`);
+      }
+
+      await response.text().catch(() => undefined);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : t('identify.alerts.requestFailed');
+      Alert.alert(t('identify.alerts.errorTitle'), message);
+    } finally {
+      setIsIdentifying(false);
+    }
+  }, [t]);
+
   return (
     <View style={[styles.screen, { paddingTop: insets.top + 12, paddingBottom: 12 + tabBarHeight }]}>
       <Text style={styles.title}>{t('identify.title')}</Text>
@@ -289,36 +335,60 @@ export default function IdentifyScreen() {
       {images.length > 0 ? <Text style={styles.hint}>{t('identify.hints.cropTip')}</Text> : null}
 
       {images.length === 0 ? (
-        <Text style={styles.emptyState}>{t('identify.empty.noImages')}</Text>
+        <View style={styles.content}>
+          <Text style={styles.emptyState}>{t('identify.empty.noImages')}</Text>
+        </View>
       ) : (
-        <FlatList
-          data={images}
-          keyExtractor={(item) => item.id}
-          numColumns={3}
-          contentContainerStyle={[styles.grid, { paddingBottom: 24 + tabBarHeight }]}
-          renderItem={({ item }) => (
-            <View style={styles.gridItem}>
-              <Pressable onPress={() => cropImage(item)} style={styles.thumbnailPressable}>
-                <Image
-                  source={{ uri: item.savedUri ?? normalizeUri(item.picker.path) }}
-                  style={styles.thumbnail}
-                  accessibilityLabel={t('identify.accessibility.selectedImage')}
-                />
-              </Pressable>
+        <View style={styles.content}>
+          <FlatList
+            data={images}
+            keyExtractor={(item) => item.id}
+            numColumns={3}
+            style={styles.list}
+            contentContainerStyle={styles.grid}
+            renderItem={({ item }) => (
+              <View style={styles.gridItem}>
+                <Pressable onPress={() => cropImage(item)} style={styles.thumbnailPressable}>
+                  <Image
+                    source={{ uri: item.savedUri ?? normalizeUri(item.picker.path) }}
+                    style={styles.thumbnail}
+                    accessibilityLabel={t('identify.accessibility.selectedImage')}
+                  />
+                </Pressable>
 
-              <Pressable
-                onPress={() => removeImage(item.id)}
-                hitSlop={10}
-                style={styles.removeButton}
-                accessibilityRole="button"
-                accessibilityLabel={t('identify.accessibility.removeImage')}
-              >
-                <Text style={styles.removeButtonText}>×</Text>
-              </Pressable>
-            </View>
-          )}
-        />
+                <Pressable
+                  onPress={() => removeImage(item.id)}
+                  hitSlop={10}
+                  style={styles.removeButton}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('identify.accessibility.removeImage')}
+                >
+                  <Text style={styles.removeButtonText}>×</Text>
+                </Pressable>
+              </View>
+            )}
+          />
+        </View>
       )}
+
+      <View style={styles.bottomBar}>
+        <Pressable
+          onPress={handleIdentify}
+          disabled={isIdentifying}
+          style={({ pressed }) => [styles.identifyButton, pressed ? styles.identifyButtonPressed : null, isIdentifying ? styles.identifyButtonDisabled : null]}
+          accessibilityRole="button"
+          accessibilityLabel={t('identify.actions.identify')}
+        >
+          <MaterialCommunityIcons name="message-text" size={18} color={colors.buttonText} />
+          <Text style={styles.identifyButtonText}>{t('identify.actions.identify')}</Text>
+        </Pressable>
+      </View>
+
+      {isIdentifying ? (
+        <View style={styles.loadingOverlay} pointerEvents="auto">
+          <ActivityIndicator size="large" color={colors.green} />
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -382,6 +452,9 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.text,
   },
+  content: {
+    flex: 1,
+  },
   emptyState: {
     marginTop: 14,
     fontSize: 14,
@@ -389,7 +462,10 @@ const styles = StyleSheet.create({
   },
   grid: {
     paddingTop: 14,
-    paddingBottom: 24,
+    paddingBottom: 12,
+  },
+  list: {
+    flex: 1,
   },
   gridItem: {
     flex: 1,
@@ -420,5 +496,37 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     fontWeight: '600',
     color: colors.buttonText,
+  },
+  bottomBar: {
+    marginTop: 12,
+  },
+  identifyButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 14,
+    borderWidth: 1,
+    borderRadius: 12,
+    backgroundColor: colors.green,
+    borderColor: colors.greenDark,
+    gap: 8,
+  },
+  identifyButtonPressed: {
+    backgroundColor: colors.greenLight,
+  },
+  identifyButtonDisabled: {
+    opacity: 0.7,
+  },
+  identifyButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.buttonText,
+  },
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.white,
   },
 });
