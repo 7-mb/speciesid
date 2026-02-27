@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "feb-cropper-1",
-    "slug": "feb-cropper-1",
+    "name": "SpeciesID",
+    "slug": "speciesid",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -14,7 +14,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.example.febcropper1",
+      "bundleIdentifier": "com.example.speciesid",
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "Diese App benötigt Zugriff auf deine Fotomediathek, damit du Bilder auswählen kannst.",
         "NSPhotoLibraryAddUsageDescription": "Diese App speichert bearbeitete Bilder (inkl. EXIF-Dummy-Daten) in deiner Fotogalerie.",
@@ -43,7 +43,7 @@
     },
     "extra": {
       "eas": {
-        "projectId": "a382c39b-8877-490a-962b-27a9f710f686"
+        "projectId": "f8018928-8fd0-467d-a1f8-83ee433e4488"
       }
     }
   }

@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { DEFAULT_LANGUAGE, translate, type Language, type TranslationKey } from '../i18n/translations';
 
-const STORAGE_KEY = 'feb-cropper-1.language';
+const STORAGE_KEY = 'speciesid.language';
 
 type I18nContextValue = {
   language: Language;

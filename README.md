@@ -1,4 +1,4 @@
-# feb-cropper-1
+# SpeciesID
 
 Expo (TypeScript) Demo-App: Nutzer kann **1–5 Bilder** aus der Galerie auswählen oder **ein Foto mit der Kamera aufnehmen** – umgesetzt mit `react-native-image-crop-picker`.
 
@@ -12,8 +12,8 @@ Hinweis: Wenn du neue **Native Module** installierst (z.B. `@lodev09/react-nativ
 
 ## Wo finde ich die gespeicherten Bilder?
 
-- **iOS Fotos-App:** Die App speichert die Bilder (inkl. Dummy-EXIF) in ein Album namens **`feb-cropper-1`**. Du findest sie in **Fotos → Alben**.
-- **iOS Dateien-App (optional):** Zusätzlich liegt eine Kopie im App-Dokumente-Ordner. Mit den gesetzten iOS-Keys (`UIFileSharingEnabled`, `LSSupportsOpeningDocumentsInPlace`) erscheint die App unter **Dateien → Auf meinem iPhone → feb-cropper-1**.
+- **iOS Fotos-App:** Die App speichert die Bilder (inkl. Dummy-EXIF) in ein Album namens **`SpeciesID`**. Du findest sie in **Fotos → Alben**.
+- **iOS Dateien-App (optional):** Zusätzlich liegt eine Kopie im App-Dokumente-Ordner. Mit den gesetzten iOS-Keys (`UIFileSharingEnabled`, `LSSupportsOpeningDocumentsInPlace`) erscheint die App unter **Dateien → Auf meinem iPhone → SpeciesID**.
 
 Wenn du `app.json` änderst oder neue Native Module installierst, baue den iOS Dev Client erneut (EAS Build), damit die Änderungen im nativen Build landen.
 
@@ -53,9 +53,13 @@ Du kannst iOS Builds auch **ohne macOS** erstellen, aber du brauchst dafür i. d
 
 In `app.json` ist aktuell ein Platzhalter gesetzt:
 
-- `expo.ios.bundleIdentifier`: `com.example.febcropper1`
+- `expo.ios.bundleIdentifier`: `com.example.speciesid`
 
 Ändere den Identifier auf etwas, das zu deinem Team passt und eindeutig ist.
+
+Beispiel (für dieses Repo nach dem Rename):
+
+- `expo.ios.bundleIdentifier`: `com.example.speciesid`
 
 2. EAS CLI installieren & anmelden
 

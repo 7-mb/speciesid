@@ -46,8 +46,8 @@ function buildDummyExifTags(): ExifTags {
 
     UserComment: 'CUSTOM: hard-coded dummy user comment',
     MakerNote: 'CUSTOM: hard-coded maker note payload',
-    HostComputer: 'CUSTOM: feb-cropper-1',
-    Software: 'feb-cropper-1 (dummy-exif)',
+    HostComputer: 'CUSTOM: SpeciesID',
+    Software: 'SpeciesID (dummy-exif)',
     Artist: 'Demo',
     ImageDescription: 'Dummy image with injected EXIF',
     ImageUniqueID: 'dummy-unique-id-0001',
@@ -129,7 +129,7 @@ export default function IdentifyScreen() {
           Alert.alert(t('identify.alerts.noPermissionTitle'), t('identify.alerts.noPermissionBody'));
         } else {
           const asset = await MediaLibrary.createAssetAsync(targetFile.uri);
-          const albumName = 'feb-cropper-1';
+          const albumName = 'SpeciesID';
           const album = await MediaLibrary.getAlbumAsync(albumName);
           if (album) {
             await MediaLibrary.addAssetsToAlbumAsync([asset], album, false);
