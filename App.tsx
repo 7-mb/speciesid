@@ -39,7 +39,7 @@ function AppTabs() {
           tabBarStyle: {
             backgroundColor: colors.green,
             borderTopColor: colors.greenDark,
-            height: tabBarHeight,
+            //height: tabBarHeight,
             //paddingTop: 6,
             //paddingBottom: tabBarPaddingBottom,
           },
