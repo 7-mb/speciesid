@@ -4,6 +4,7 @@ import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ImagePicker, { type Image as PickerImage, type PickerErrorCode } from 'react-native-image-crop-picker';
 import * as FileSystem from 'expo-file-system';
+import * as ImageManipulator from 'expo-image-manipulator';
 import * as Exify from '@lodev09/react-native-exify';
 import type { ExifTags } from '@lodev09/react-native-exify';
 import * as MediaLibrary from 'expo-media-library';
@@ -15,6 +16,7 @@ import { useMode } from '../state/mode';
 import { colors } from '../theme/colors';
 
 const MAX_IMAGES = 5;
+const PAYLOAD_IMAGE_MIN_SIDE_PX = 384;
 const IDENTIFY_API_URL =
   (globalThis as unknown as { process?: { env?: Record<string, string | undefined> } }).process?.env?.EXPO_PUBLIC_IDENTIFY_API_URL ??
   'https://speciesid.wsl.ch/florid';
@@ -74,6 +76,58 @@ function ensureImagesDir(): FileSystem.Directory {
     // ignore
   }
   return dir;
+}
+
+function getImageSizeAsync(uri: string): Promise<{ width: number; height: number }> {
+  return new Promise((resolve, reject) => {
+    Image.getSize(
+      uri,
+      (width, height) => resolve({ width, height }),
+      (error) => reject(error)
+    );
+  });
+}
+
+async function buildPayloadBase64Image(params: {
+  uri: string;
+  width?: number;
+  height?: number;
+}): Promise<string> {
+  let width = params.width;
+  let height = params.height;
+
+  if (!width || !height) {
+    const size = await getImageSizeAsync(params.uri);
+    width = size.width;
+    height = size.height;
+  }
+
+  const minSide = Math.min(width, height);
+  const scale = minSide > PAYLOAD_IMAGE_MIN_SIDE_PX ? PAYLOAD_IMAGE_MIN_SIDE_PX / minSide : 1;
+
+  const actions: ImageManipulator.Action[] =
+    scale === 1
+      ? []
+      : [
+          {
+            resize: {
+              width: Math.max(1, Math.round(width * scale)),
+              height: Math.max(1, Math.round(height * scale)),
+            },
+          },
+        ];
+
+  const result = await ImageManipulator.manipulateAsync(params.uri, actions, {
+    base64: true,
+    compress: 0.9,
+    format: ImageManipulator.SaveFormat.JPEG,
+  });
+
+  if (!result.base64) {
+    throw new Error('Failed to encode image as base64');
+  }
+
+  return result.base64;
 }
 
 export default function IdentifyScreen() {
@@ -282,8 +336,16 @@ export default function IdentifyScreen() {
     setIdentifyResponseText('');
     try {
       const today = new Date().toISOString().slice(0, 10);
+
+      const payloadImages: string[] = [];
+      for (const item of images) {
+        const uri = normalizeUri(item.savedUri ?? item.picker.path);
+        const base64 = await buildPayloadBase64Image({ uri, width: item.picker.width, height: item.picker.height });
+        payloadImages.push(base64);
+      }
+
       const payload = {
-        images: [],
+        images: payloadImages,
         lat: 47.33965229871837,
         lon: 7.8931488585743645,
         date: today,
@@ -326,7 +388,7 @@ export default function IdentifyScreen() {
     } finally {
       setIsIdentifying(false);
     }
-  }, [t]);
+  }, [images, normalizeUri, t]);
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top + 12, paddingBottom: 0 }]}>
