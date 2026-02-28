@@ -21,6 +21,24 @@ const IDENTIFY_API_URL =
   (globalThis as unknown as { process?: { env?: Record<string, string | undefined> } }).process?.env?.EXPO_PUBLIC_IDENTIFY_API_URL ??
   'https://speciesid.wsl.ch/florid';
 
+type TaxaData = {
+  id: number[];
+  name: string[];
+  image_model: number[];
+  ecological_model: number[];
+  relative_eco_score: number[];
+  combined_model: number[];
+  coverage: number[];
+};
+
+type IdentifyResponse = {
+  top_n?: {
+    by_combined?: TaxaData;
+  };
+  requested_taxa?: TaxaData;
+  Warnings?: string[];
+};
+
 type StoredImage = {
   id: string;
   picker: PickerImage;
@@ -134,6 +152,7 @@ export default function IdentifyScreen() {
   const [images, setImages] = useState<StoredImage[]>([]);
   const [isIdentifying, setIsIdentifying] = useState(false);
   const [identifyResponseText, setIdentifyResponseText] = useState<string>('');
+  const [identifyResults, setIdentifyResults] = useState<Array<{ id: number; name: string; percent: number }>>([]);
 
   const insets = useSafeAreaInsets();
   const tabBarHeight = useBottomTabBarHeight();
@@ -334,6 +353,7 @@ export default function IdentifyScreen() {
 
     setIsIdentifying(true);
     setIdentifyResponseText('');
+    setIdentifyResults([]);
     try {
       const today = new Date().toISOString().slice(0, 10);
 
@@ -374,13 +394,32 @@ export default function IdentifyScreen() {
 
       if (looksLikeJson) {
         try {
-          const parsed = JSON.parse(raw);
+          const parsed = JSON.parse(raw) as IdentifyResponse;
+
+          const taxa = parsed?.top_n?.by_combined;
+          if (taxa?.id?.length && taxa?.name?.length && taxa?.combined_model?.length) {
+            const len = Math.min(taxa.id.length, taxa.name.length, taxa.combined_model.length);
+            const rows: Array<{ id: number; name: string; percent: number }> = [];
+            for (let i = 0; i < len; i++) {
+              const id = taxa.id[i];
+              const name = taxa.name[i];
+              const score = taxa.combined_model[i];
+              const percent = typeof score === 'number' ? (score <= 1 ? score * 100 : score) : NaN;
+              rows.push({ id, name, percent });
+            }
+            setIdentifyResults(rows);
+          } else {
+            setIdentifyResults([]);
+          }
+
           setIdentifyResponseText(JSON.stringify(parsed, null, 2));
         } catch {
           setIdentifyResponseText(raw);
+          setIdentifyResults([]);
         }
       } else {
         setIdentifyResponseText(raw);
+        setIdentifyResults([]);
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : t('identify.alerts.requestFailed');
@@ -463,6 +502,16 @@ export default function IdentifyScreen() {
             <MaterialCommunityIcons name="message-text" size={18} color={colors.buttonText} />
             <Text style={styles.identifyButtonText}>{t('identify.actions.identify')}</Text>
           </Pressable>
+
+          {identifyResults.length > 0 ? (
+            <View style={styles.resultsWrap}>
+              {identifyResults.map((row) => (
+                <Text key={`${row.id}-${row.name}`} style={styles.resultRowText}>
+                  {row.id} {row.name} {Number.isFinite(row.percent) ? `${row.percent.toFixed(1)}%` : ''}
+                </Text>
+              ))}
+            </View>
+          ) : null}
 
           {identifyResponseText ? (
             <Text style={styles.identifyResponseText} selectable>
@@ -589,6 +638,14 @@ const styles = StyleSheet.create({
   },
   bottomBar: {
     marginTop: 12,
+  },
+  resultsWrap: {
+    marginTop: 10,
+  },
+  resultRowText: {
+    fontSize: 13,
+    lineHeight: 16,
+    color: colors.text,
   },
   identifyButton: {
     flexDirection: 'row',
