@@ -75,7 +75,7 @@ export function useIdentifyRequest(params: { t: TFunction; images: StoredImage[]
               const id = taxa.id[i];
               const name = taxa.name[i];
               const score = taxa.combined_model[i];
-              const percent = typeof score === 'number' ? (score <= 1 ? score * 100 : score) : NaN;
+              const percent = typeof score === 'number' ? score : NaN;
               rows.push({ id, name, percent });
             }
             setIdentifyResults(rows);
