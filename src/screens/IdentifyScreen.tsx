@@ -1,4 +1,4 @@
-import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Image, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -8,6 +8,8 @@ import { useI18n } from '../state/language';
 import { useMode } from '../state/mode';
 import { colors } from '../theme/colors';
 
+import { getInfofloraLocalizedName, getInfofloraLocalizedUrl, getInfofloraTaxonById } from '../data/infofloraTaxa';
+
 import { normalizeUri } from './identify/imageUtils';
 import { useIdentifyImages } from './identify/useIdentifyImages';
 import { useIdentifyRequest } from './identify/useIdentifyRequest';
@@ -16,11 +18,15 @@ export default function IdentifyScreen() {
   const insets = useSafeAreaInsets();
   const tabBarHeight = useBottomTabBarHeight();
   const { mode, setMode } = useMode();
-  const { t } = useI18n();
+  const { t, language } = useI18n();
 
   const { images, selectedCountText, savedCountText, pickFromGallery, takePhoto, cropImage, removeImage } = useIdentifyImages({ t });
 
   const { isIdentifying, identifyResponseText, identifyResults, handleIdentify } = useIdentifyRequest({ t, images });
+
+  const openInfoLink = (url: string) => {
+    Linking.openURL(url).catch(() => undefined);
+  };
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top + 12, paddingBottom: 0 }]}>
@@ -98,11 +104,35 @@ export default function IdentifyScreen() {
 
           {identifyResults.length > 0 ? (
             <View style={styles.resultsWrap}>
-              {identifyResults.map((row) => (
-                <Text key={`${row.id}-${row.name}`} style={styles.resultRowText}>
-                  {row.id} {row.name} {Number.isFinite(row.percent) ? `${row.percent.toFixed(1)}%` : ''}
-                </Text>
-              ))}
+              {identifyResults.map((row) => {
+                const taxon = getInfofloraTaxonById(row.id);
+                const localizedName = taxon ? getInfofloraLocalizedName(taxon, language) : undefined;
+                const url = taxon ? getInfofloraLocalizedUrl(taxon, language) : undefined;
+                const percentText = Number.isFinite(row.percent) ? `${row.percent.toFixed(1)}%` : '';
+
+                return (
+                  <View key={`${row.id}-${row.name}`} style={styles.resultRow}>
+                    <View style={styles.resultRowLeft}>
+                      <Text style={styles.resultRowText}>
+                        {row.id} {row.name}
+                        {localizedName ? ` (${localizedName})` : ''} {percentText}
+                      </Text>
+                    </View>
+
+                    {url ? (
+                      <Pressable
+                        onPress={() => openInfoLink(url)}
+                        hitSlop={10}
+                        style={styles.resultRowLinkButton}
+                        accessibilityRole="link"
+                        accessibilityLabel={t('identify.accessibility.openInfoLink')}
+                      >
+                        <MaterialCommunityIcons name="link-variant" size={18} color={colors.text} />
+                      </Pressable>
+                    ) : null}
+                  </View>
+                );
+              })}
             </View>
           ) : null}
 
@@ -235,10 +265,22 @@ const styles = StyleSheet.create({
   resultsWrap: {
     marginTop: 10,
   },
+  resultRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  resultRowLeft: {
+    flex: 1,
+    paddingRight: 8,
+  },
   resultRowText: {
     fontSize: 13,
     lineHeight: 16,
     color: colors.text,
+  },
+  resultRowLinkButton: {
+    padding: 6,
   },
   identifyButton: {
     flexDirection: 'row',

@@ -27,6 +27,7 @@ export type TranslationKey =
   | 'identify.alerts.limitBody'
   | 'identify.accessibility.selectedImage'
   | 'identify.accessibility.removeImage'
+  | 'identify.accessibility.openInfoLink'
   | 'whatsHere.title'
   | 'whatsHere.subtitle'
   | 'whatsHere.empty'
@@ -74,6 +75,7 @@ export const TRANSLATIONS: Record<Language, Dictionary> = {
     'identify.alerts.limitBody': 'Du kannst bis zu {{max}} Bilder auswählen.',
     'identify.accessibility.selectedImage': 'Ausgewähltes Bild',
     'identify.accessibility.removeImage': 'Bild entfernen',
+    'identify.accessibility.openInfoLink': 'Arteninfo öffnen',
 
     'whatsHere.title': "Was gibt's hier?",
     'whatsHere.subtitle': 'Platzhalter für lokale Beobachtungen und Vorschläge.',
@@ -118,6 +120,7 @@ export const TRANSLATIONS: Record<Language, Dictionary> = {
     'identify.alerts.limitBody': 'You can select up to {{max}} images.',
     'identify.accessibility.selectedImage': 'Selected image',
     'identify.accessibility.removeImage': 'Remove image',
+    'identify.accessibility.openInfoLink': 'Open species info',
 
     'whatsHere.title': "What's here?",
     'whatsHere.subtitle': 'Placeholder screen for local observations and suggestions.',
@@ -162,6 +165,7 @@ export const TRANSLATIONS: Record<Language, Dictionary> = {
     'identify.alerts.limitBody': "Vous pouvez sélectionner jusqu’à {{max}} images.",
     'identify.accessibility.selectedImage': 'Image sélectionnée',
     'identify.accessibility.removeImage': 'Supprimer l’image',
+    'identify.accessibility.openInfoLink': "Ouvrir les infos sur l’espèce",
 
     'whatsHere.title': "Qu’y a-t-il ici ?",
     'whatsHere.subtitle': 'Écran provisoire pour les observations locales et des suggestions.',
@@ -206,6 +210,7 @@ export const TRANSLATIONS: Record<Language, Dictionary> = {
     'identify.alerts.limitBody': 'Puoi selezionare fino a {{max}} immagini.',
     'identify.accessibility.selectedImage': 'Immagine selezionata',
     'identify.accessibility.removeImage': 'Rimuovi immagine',
+    'identify.accessibility.openInfoLink': 'Apri informazioni sulla specie',
 
     'whatsHere.title': "Cosa c’è qui?",
     'whatsHere.subtitle': 'Schermata segnaposto per osservazioni locali e suggerimenti.',
